@@ -14,6 +14,7 @@ class OrderDetails extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           child: Column(
             children: [
               orderStatus(color:redColor, icon:Icons.done, title:"Order placed", showDone:data['order_placed']),
@@ -74,21 +75,27 @@ class OrderDetails extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
       children: List.generate(data['orders'].length, (index){
-          return  Column(
+          return  Column(crossAxisAlignment: CrossAxisAlignment.start,
             children:[ order_placeDetails(
              title1: data['orders'][index]['title'],
               title2: data['orders'][index]['totalPrice'],
               d1: "${data['orders'][index]['qty']}x",
               d2:"Refundable"),
-              Container(
-                width:30,
-                height:10,
-                color: Color(data['orders'][index]['color']),)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal:16.0),
+                child: Container(
+                  width:30,
+                  height:20,
+                  color: Color(data['orders'][index]['color']),),
+              ),
+              const Divider()
          ] );
 
 
       }).toList(),
-    )
+    ).box.outerShadowMd.white.margin(const EdgeInsets.only(bottom: 4)).make(),
+    20.heightBox,
+
   ],)
             ],
           ),

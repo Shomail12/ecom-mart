@@ -25,6 +25,6 @@ class FirestoreServices{
     return firestore.collection(productsCollection).where('p_wishlist',arrayContains:currentUser!.uid ).snapshots();
   }
   static getAllMsgs(){
-    return firestore.collection(messageCollection).where('fromId',isEqualTo:currentUser!.uid).snapshots();
+    return firestore.collection(chatCollection).where('fromId',isEqualTo:currentUser!.uid).snapshots();
   }
 }

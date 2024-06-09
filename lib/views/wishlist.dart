@@ -8,7 +8,7 @@ class Wishlist extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var controller=Get.find<CartController>();
+
     return Scaffold(
         backgroundColor: whiteColor,
         appBar:AppBar(
@@ -30,33 +30,33 @@ class Wishlist extends StatelessWidget {
               }
               else{
                 var data= snapshot.data!.docs;
-                controller.calculate(data);
-                controller.productSnapshot=data;
-                return Padding(
-                  padding:const EdgeInsets.all(8.0),
-                  child: Padding(
-                    padding:const EdgeInsets.all(8.0),
-                    child: Column(children: [Expanded(child: ListView.builder(
-                      itemCount: data.length,
-                      itemBuilder:(BuildContext context,int index){
-                        return ListTile(
-                          leading: Image.network("${data[index]['image']}",width: 80,fit: BoxFit.cover,),
-                          title: "${data[index]['title']} (x${data[index]['quantity']})"
-                              .text.fontFamily(semibold).size(16).make(),
-                          subtitle: "${data[index]['totalprice']}".numCurrency.text.fontFamily(semibold).color(redColor).size(16).make(),
-                          trailing: const Icon(Icons.delete,color: redColor,).onTap(() { FirestoreServices.deleteDocument(data[index].id); }),
-                        );
-                      } ,
-                    )),
-                      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: ["Total price".text.fontFamily(semibold).color(darkFontGrey).make(),
-                          Obx(()=>"${controller.totalPrice.value}".numCurrency.text.fontFamily(semibold).color(darkFontGrey).make())],
-                      ).box.padding(EdgeInsets.all(12)).color(lightgolden).width(context.screenWidth-60).roundedSM.make(),
 
-                    ],),
-                  ),
-                );
-              }}
+                  return Column(
+                    children: [
+                      Expanded(
+                      child: ListView.builder(
+                          itemCount: data.length,
+                          itemBuilder: (BuildContext context,int index){
+                          return  ListTile(
+                          leading: Image.network("${data[index]['p_images'][0]}",
+                            width: 80,
+                            fit: BoxFit.cover,),
+                          title: "${data[index]['p_name']} (x${data[index]['p_quantity']})"
+                              .text.fontFamily(semibold).size(16).make(),
+                          subtitle: "${data[index]['p_price']}".numCurrency.text.fontFamily(semibold).color(redColor).size(16).make(),
+    trailing: const Icon(Icons.favorite,color: redColor,).onTap(() async{
+      await firestore.collection(productsCollection).doc(data[index].id).set({
+        'p_wishlist':FieldValue.arrayRemove([currentUser!.uid])
+      },SetOptions(merge: true));
+    }),
+    );
+    }),
+                ),
+                    ],
+                  );
+
+                };
+              }
         )
     );
   }
