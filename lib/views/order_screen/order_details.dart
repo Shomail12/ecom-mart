@@ -74,12 +74,18 @@ class OrderDetails extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
       children: List.generate(data['orders'].length, (index){
-          return  order_placeDetails(
-           title1: data['orders'][index]['title'],
-            title2: data['orders'][index]['totalPrice'],
-            d1: "${data['orders'][index]['qty']}x",
-            d2:"Refundable"
-          );
+          return  Column(
+            children:[ order_placeDetails(
+             title1: data['orders'][index]['title'],
+              title2: data['orders'][index]['totalPrice'],
+              d1: "${data['orders'][index]['qty']}x",
+              d2:"Refundable"),
+              Container(
+                width:30,
+                height:10,
+                color: Color(data['orders'][index]['color']),)
+         ] );
+
 
       }).toList(),
     )
