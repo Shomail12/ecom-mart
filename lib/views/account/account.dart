@@ -12,6 +12,7 @@ import 'package:emart_app/views/messages/messages.dart';
 import 'package:emart_app/views/order_screen/order_screen.dart';
 import 'package:emart_app/views/wishlist.dart';
 import 'package:emart_app/widgets/bg_widget.dart';
+import 'package:emart_app/widgets/loading_indicator.dart';
 class Account extends StatelessWidget {
   const Account({Key? key}) : super(key: key);
 
@@ -69,26 +70,39 @@ class Account extends StatelessWidget {
     "Logout".text.fontFamily(semibold).white.make())
     ],
     ),
+                FutureBuilder(
+                    future: FirestoreServices.getCounts(),
+                    builder: (BuildContext context,AsyncSnapshot snapshot){
+                      if(!snapshot.hasData){
+                        return Center(
+                          child: loadingIndicator(),
+                        );
+                      }
+                      else{
+                        var countData= snapshot.data;
+                        print("Msg data ${countData}");
+                        return Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            detailCard(
+                                width: context.screenWidth/3.6,
+                                count: "${countData[0].toString()}",
+                                title: "in your cart"
+                            ),
+                            detailCard(
+                                width: context.screenWidth/3.6,
+                                count: "${countData[1].toString()}",
+                                title: "in your wishlist"
+                            ), detailCard(
+                                width: context.screenWidth/3.6,
 
-    Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-    children: [
-    detailCard(
-    width: context.screenWidth/3.6,
-   count: "${data['cart_count']}",
-    title: "in your cart"
-    ),
-    detailCard(
-    width: context.screenWidth/3.6,
-        count: "${data['order_count']}",
-    title: "in your wishlist"
-    ), detailCard(
-    width: context.screenWidth/3.6,
+                                count: "${countData[2].toString()}",
+                                title: "in your orders"
+                            )
+                          ],
+                        );
+                      }}
+                ),
 
-    count: "${data['wishlist_count']}",
-    title: "in your orders"
-    )
-    ],
-    ),
     //profilebuttons
     ListView.separated(
     shrinkWrap: true,

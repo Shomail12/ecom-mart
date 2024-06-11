@@ -1,11 +1,18 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emart_app/consts/consts.dart';
+import 'package:emart_app/controllers/homeController.dart';
+import 'package:emart_app/services/services.dart';
+import 'package:emart_app/views/catergories/itemDetails.dart';
 import 'package:emart_app/views/homeButtons.dart';
 import 'package:emart_app/views/home_screen/featuredButton.dart';
+import 'package:emart_app/views/home_screen/search_screen.dart';
+import 'package:emart_app/widgets/loading_indicator.dart';
 class Home extends StatelessWidget {
   const Home({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    var controller=Get.find<HomeController>();
     return Container(padding: const EdgeInsets.all(12),
     color: lightGrey,
       width:context.screenWidth,
@@ -15,14 +22,16 @@ class Home extends StatelessWidget {
           alignment: Alignment.center,
           height: 60,
           color: lightGrey,
-          child: TextFormField(
+          child: TextFormField(controller: controller.searchController,
             decoration: InputDecoration(
               border: InputBorder.none,
               filled: true,
               fillColor: whiteColor,
               hintText:searchAnyThing,
               hintStyle: TextStyle(color: textfieldGrey),
-              suffixIcon: Icon(Icons.search)
+              suffixIcon: Icon(Icons.search).onTap(() {
+                Get.to(()=>SearchScreen(title:controller.searchController.text));
+              })
 
             ),
           ),
@@ -123,14 +132,32 @@ class Home extends StatelessWidget {
                       children: [
                         featuredProduct.text.color(whiteColor).size(18).fontFamily(bold).make(),
                         10.heightBox,
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: List.generate(6, (index) => FeaturedProduct(
-                              icon:featuredProductimages[index],
-                            title: featuredProductTitle[index],
-                              price: featuredProductPrice[index]
+                        FutureBuilder(
+                          future: FirestoreServices.getFeaturedProducts(),
+                          builder: (context,AsyncSnapshot<QuerySnapshot>snapshot){
+                            if(!snapshot.hasData){
+                              return Center(
+                                child:  loadingIndicator(),
+                              );
+                            }
 
-                          )),),
+                             else if(snapshot.data!.docs.isEmpty){
+                           return "No featured products".text.white.makeCentered();
+                            }
+                             else{
+                               var featuredData=snapshot.data!.docs;
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: List.generate(featuredData.length, (index) => FeaturedProduct(
+                                icon:featuredData[index]['p_images'][0],
+                              title: featuredData[index]['p_name'],
+                                price: featuredData[index]['p_price']
+
+                            ).onTap(() {  Get.to(() =>
+                                ItemDetail(
+                                  title: featuredData[index]['p_name'],
+                                  data: featuredData[index],)); }),),);}}
+                        ),
                       ],
                     ),
                   ),
@@ -150,24 +177,47 @@ class Home extends StatelessWidget {
                   ).box.rounded.clip(Clip.antiAlias).margin(const EdgeInsets.symmetric(horizontal: 8)).make();
                 }),
                 10.heightBox,
+               Column(crossAxisAlignment: CrossAxisAlignment.start,
+                 children: [
+                   "AllProduct".text.size(18).fontFamily(bold).make(),
+                   8.heightBox,
+                   //all product section
+                   StreamBuilder(
+                       stream: FirestoreServices.allproducts(),
+                       builder: (BuildContext context,AsyncSnapshot <QuerySnapshot>snapshot){
+                         if(!snapshot.hasData){
+                           return Center(
+                             child: loadingIndicator(),
+                           );
+                         }
+                         else{
+                           var allproductdata= snapshot.data!.docs;
+                           print("Msg data ${allproductdata}");
+                           return GridView.builder(
+                               physics: const NeverScrollableScrollPhysics(),
+                               shrinkWrap: true,
+                               itemCount: allproductdata.length,
+                               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2,mainAxisExtent:200 ,mainAxisSpacing: 8,crossAxisSpacing: 8),
+                               itemBuilder: (context,index){
+                                 return Container(
+                                   child: FeaturedProduct(
 
-                //all product section
-                GridView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount: 6,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2,mainAxisExtent:200 ,mainAxisSpacing: 8,crossAxisSpacing: 8),
-                    itemBuilder: (context,index){
-                return Container(
-                child: FeaturedProduct(
+                                       icon:allproductdata[index]['p_images'][0],
+                                       title: allproductdata[index]['p_name'],
+                                       price: allproductdata[index]['p_price'],
 
-                    icon:featuredProductimages[index],
-                    title: featuredProductTitle[index],
-                    price: featuredProductPrice[index]
+                                   ).onTap(() {  Get.to(() =>
+                                       ItemDetail(
+                                         title: allproductdata[index]['p_name'],
+                                         data: allproductdata[index],)); }),
+                                 );
+                               });
+                         }}
+                   )
+                 ],
+               ),
 
-                ),
-                );
-                })
+
               ],),
             ),
           )

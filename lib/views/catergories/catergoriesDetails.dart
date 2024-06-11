@@ -6,78 +6,102 @@ import 'package:emart_app/views/catergories/itemDetails.dart';
 import 'package:emart_app/views/home_screen/featuredButton.dart';
 import 'package:emart_app/widgets/bg_widget.dart';
 import 'package:emart_app/widgets/loading_indicator.dart';
-class CatergoriesDetails extends StatelessWidget {
+class CatergoriesDetails extends StatefulWidget {
   final String? title;
   const CatergoriesDetails({Key? key,required this.title}) : super(key: key);
 
   @override
+  State<CatergoriesDetails> createState() => _CatergoriesDetailsState();
+}
+
+class _CatergoriesDetailsState extends State<CatergoriesDetails> {
+  @override
+
+  void initState(){
+    super.initState();
+    switchCategory(widget.title);
+
+  }
+  switchCategory(title){
+    if(controller.subcat.contains(title)){
+      productMethod= FirestoreServices.getSubCategory(title);
+    }
+    else{
+      productMethod=FirestoreServices.getProducts(title);
+    }
+  }
+  dynamic productMethod;
+  var controller=Get.find<ProductController>();
   Widget build(BuildContext context) {
-    var controller=Get.find<ProductController>();
     return bgWidget(
       child: Scaffold(
         appBar: AppBar(
-          title: title!.text.fontFamily(bold).make(),
+          title: widget.title!.text.fontFamily(bold).make(),
         ),
-        body:StreamBuilder(
-          stream: FirestoreServices.getProducts(title),
-          builder: (BuildContext context,AsyncSnapshot<QuerySnapshot> snapshot){
-            if(!snapshot.hasData){
-              return Center(
-                child: loadingIndicator(),
-              );
-            }
-            else if(snapshot.data!.docs.isEmpty){
-              return Center(
-                child: "No Product Found".text.color(darkFontGrey).make(),
-              );
-            }
-            else{
-              var data= snapshot.data!.docs;
-              return  Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    width: double.infinity,
-                    decoration: BoxDecoration(color: redColor),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      physics: BouncingScrollPhysics(),
-                      child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: List.generate(controller.subcat.length
-                              , (index) => "${controller.subcat[index]}".text.fontFamily(semibold).color(darkFontGrey)
-                                  .makeCentered()
-                                  .box
-                                  .white.rounded
-                                  .size(120,60).margin(const EdgeInsets.symmetric(horizontal: 4)).padding(const EdgeInsets.all(4)).make()
+        body:Column(crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              width: double.infinity,
+              decoration: BoxDecoration(color: redColor),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: BouncingScrollPhysics(),
+                child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: List.generate(controller.subcat.length
+                        , (index) => "${controller.subcat[index]}".text.fontFamily(semibold).color(darkFontGrey)
+                            .makeCentered()
+                            .box
+                            .white.rounded
+                            .size(120,60)
+                            .margin(const EdgeInsets.symmetric(horizontal: 4))
+                            .padding(const EdgeInsets.all(4))
+                            .make()
+                        .onTap((){switchCategory("${controller.subcat[index]}");
+                    setState((){});})
 
-                          )),
+                    )),
+              ),
+            ),
+            StreamBuilder(
+              stream: productMethod,
+              builder: (BuildContext context,AsyncSnapshot<QuerySnapshot> snapshot){
+                if(!snapshot.hasData){
+                  return Expanded(
+                    child: Center(
+                      child: loadingIndicator(),
                     ),
-                  ),
-                  Expanded(
-                    child: Container(
-                      color: lightGrey,
-                      padding: EdgeInsets.all(12),
-                      child: GridView.builder(
-                          shrinkWrap: true,
-                          itemCount: data.length,
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:2 ,mainAxisSpacing: 8,crossAxisSpacing: 8,mainAxisExtent: 200),
-                          itemBuilder:   (context,index){
-                            return  AllProduct(
+                  );
+                }
+                else if(snapshot.data!.docs.isEmpty){
+                  return Expanded(
+                    child: "No Product Found".text.color(darkFontGrey).makeCentered(),
+                  );
+                }
+                else{
+                  var data= snapshot.data!.docs;
+                  return  Expanded(
+                    child: GridView.builder(
+                        shrinkWrap: true,
+                        itemCount: data.length,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:2 ,mainAxisSpacing: 8,crossAxisSpacing: 8,mainAxisExtent: 200),
+                        itemBuilder:   (context,index){
+                          return  AllProduct(
 
-                                icon:data[index]['p_images'][0],
-                                title:"${data[index]['p_name']}",
-                                price: "${data[index]['p_price']}".numCurrency
+                              icon:data[index]['p_images'][0],
+                              title:"${data[index]['p_name']}",
+                              price: "${data[index]['p_price']}".numCurrency
 
-                            ).onTap(() {
-                              controller.checkIfFav(data[index]);
-                              Get.to(()=>ItemDetail(title: "${data[index]['p_name']}",data: data[index],));});
-                          }),),
-                  ),
-                ],
-              );
-            }
-          },
+                          ).onTap(() {
+                            controller.checkIfFav(data[index]);
+                            Get.to(()=>ItemDetail(title: "${data[index]['p_name']}",data: data[index],));});
+                        }),
+                  );
+                }
+              },
+            ),
+          ],
         )
         /* Column(
           children: [
